@@ -1,4 +1,4 @@
-﻿# Craft Tracker (SKSE + Prisma UI)
+# Craft Tracker (SKSE + Prisma UI)
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Skyrim SE / AE](https://img.shields.io/badge/Skyrim-SE%20%7C%20AE-brightgreen.svg)]()
@@ -58,6 +58,19 @@ A modern, persistent in-game HUD widget for **The Elder Scrolls V: Skyrim Specia
 * **[Prisma UI](https://www.nexusmods.com/skyrimspecialedition/mods/148718)** (v1.4+)
   * 🌐 Официальный сайт: [https://www.prismaui.dev/](https://www.prismaui.dev/)
   * 📦 Nexus Mods: [https://www.nexusmods.com/skyrimspecialedition/mods/148718](https://www.nexusmods.com/skyrimspecialedition/mods/148718)
+
+---
+
+## 🎮 Совместимость / Compatibility
+
+Плагин скомпилирован на базе **CommonLibSSE-ng** с поддержкой **Address Library**, что обеспечивает полную кросс-версионность (один и тот же DLL-файл работает везде):
+
+- ✅ **Skyrim Anniversary Edition (AE)**: `1.6.1130` / `1.6.1170` (Steam), `1.6.1179` (GOG) — **полная поддержка последней версии AE!**
+- ✅ **Skyrim Anniversary Edition (AE Legacy)**: `1.6.318` – `1.6.640`
+- ✅ **Skyrim Special Edition (SE)**: `1.5.97`
+- ✅ **Skyrim VR** (при наличии VR Address Library)
+- ✅ Совместим с любыми сборками и модлистами (**RFAB**, **Nolvus**, **LoreRim**, **Elysium Remastered** и др.)
+- ✅ Совместим с модами на кастомные интерфейсы (**Dear Diary**, **Nordic UI**, **TrueHUD**, **Compass Navigation Overhaul** и др.)
 
 ---
 
