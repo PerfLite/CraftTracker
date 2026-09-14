@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Craft Tracker HUD</title>
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    background-color: transparent;
+    overflow: hidden;
+    font-family: 'Futura Condensed', 'Cinzel', 'Trajan Pro', 'Segoe UI', -apple-system, sans-serif;
+    color: #f1ede4;
+}
+
+/* Tracker container on HUD - Top Left corner */
+#tracker-root {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    width: 280px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Recipe Card - transparent glassmorphism */
+.recipe-card {
+    background-color: rgba(10, 14, 18, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 3px;
+    padding: 6px 9px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.recipe-card.ready {
+    background-color: rgba(14, 38, 22, 0.40);
+    border-color: rgba(74, 222, 128, 0.55);
+    box-shadow: 0 0 10px rgba(74, 222, 128, 0.2), 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+
+/* Card Header */
+.card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding-bottom: 4px;
+}
+
+.card-title-group {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    overflow: hidden;
+}
+
+.recipe-name {
+    font-size: 14px;
+    font-weight: bold;
+    color: #f8fafc;
+    letter-spacing: 0.5px;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 220px;
+}
+
+.recipe-card.ready .recipe-name {
+    color: #86efac;
+}
+
+.recipe-qty {
+    font-size: 11px;
+    color: #fbbf24;
+    font-weight: bold;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+}
+
+.batch-badge {
+    font-size: 10px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    padding: 1px 4px;
+    border-radius: 2px;
+    background-color: rgba(234, 179, 8, 0.22);
+    border: 1px solid rgba(234, 179, 8, 0.55);
+    color: #fef08a;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+}
+
+.hammer-icon {
+    width: 20px;
+    height: 20px;
+    display: block;
+    flex-shrink: 0;
+    object-fit: contain;
+}
+
+.status-badge {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 1px 5px;
+    border-radius: 2px;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.status-badge.ready {
+    background-color: rgba(20, 50, 30, 0.65);
+    border: 1px solid rgba(74, 222, 128, 0.6);
+    color: #86efac;
+    text-shadow: 0 0 4px rgba(74, 222, 128, 0.6);
+}
+
+/* Ingredients List */
+.ingredient-list {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.ingredient-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    padding: 2px 5px;
+    border-radius: 2px;
+    background-color: rgba(0, 0, 0, 0.20);
+}
+
+.ingredient-row.satisfied {
+    background-color: rgba(34, 197, 94, 0.08);
+}
+
+.ing-left {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    overflow: hidden;
+}
+
+.ing-icon {
+    font-size: 10px;
+    width: 11px;
+    text-align: center;
+    color: #fbbf24;
+}
+
+.ingredient-row.satisfied .ing-icon {
+    color: #4ade80;
+}
+
+.ing-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #e2e8f0;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+    max-width: 170px;
+}
+
+.ingredient-row.satisfied .ing-name {
+    color: #94a3b8;
+    text-decoration: line-through;
+    opacity: 0.75;
+}
+
+.ing-counts {
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+}
+
+.ing-counts.missing {
+    color: #f87171;
+}
+
+.ing-counts.ok {
+    color: #4ade80;
+}
+</style>
+</head>
+<body>
+
+<div id="tracker-root" class="hidden">
+    <div id="recipes-container"></div>
+</div>
+
+<script>
+(function() {
+    const rootEl = document.getElementById('tracker-root');
+    const containerEl = document.getElementById('recipes-container');
+
+    const HAMMER_B64 = "data:image/png;base64,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";
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+    }
+
+    // Update function called from C++
+    window.updateTracker = function(data) {
+        let recipes = data;
+        if (typeof data === 'string') {
+            try {
+                recipes = JSON.parse(data);
+            } catch (e) {
+                console.error('Failed to parse tracker JSON:', e);
+                return;
+            }
+        }
+
+        if (!recipes || !Array.isArray(recipes) || recipes.length === 0) {
+            rootEl.classList.add('hidden');
+            containerEl.innerHTML = '';
+            return;
+        }
+
+        rootEl.classList.remove('hidden');
+
+        let html = '';
+        for (let i = 0; i < recipes.length; i++) {
+            const r = recipes[i];
+            const isReady = !!r.isReady;
+            const cardClass = isReady ? 'recipe-card ready' : 'recipe-card';
+
+            const statusHtml = isReady
+                ? '<span class="status-badge ready">&#10004; ГОТОВО</span>'
+                : '<img src="' + HAMMER_B64 + '" class="hammer-icon" alt="В процессе" title="В процессе сбора">';
+
+            const multHtml = (r.multiplier && r.multiplier > 1)
+                ? '<span class="batch-badge">&times;' + r.multiplier + '</span>'
+                : '';
+
+            const qtyHtml = (r.countProduced && r.countProduced > 1)
+                ? '<span class="recipe-qty">(' + (r.countProduced * (r.multiplier || 1)) + ' шт.)</span>'
+                : '';
+
+            html += '<div class="' + cardClass + '">';
+            html += '  <div class="card-top">';
+            html += '    <div class="card-title-group">';
+            html += '      <span class="recipe-name" title="' + escapeHtml(r.itemName) + '">' + escapeHtml(r.itemName) + '</span>';
+            html += multHtml;
+            html += qtyHtml;
+            html += '    </div>';
+            html += statusHtml;
+            html += '  </div>';
+
+            html += '  <div class="ingredient-list">';
+            if (r.ingredients && Array.isArray(r.ingredients)) {
+                for (let j = 0; j < r.ingredients.length; j++) {
+                    const ing = r.ingredients[j];
+                    const satisfied = ing.missing === 0;
+                    const rowClass = satisfied ? 'ingredient-row satisfied' : 'ingredient-row';
+                    const iconHtml = satisfied ? '&#10004;' : '&#8226;';
+                    const countClass = satisfied ? 'ing-counts ok' : 'ing-counts missing';
+
+                    html += '    <div class="' + rowClass + '">';
+                    html += '      <div class="ing-left">';
+                    html += '        <span class="ing-icon">' + iconHtml + '</span>';
+                    html += '        <span class="ing-name" title="' + escapeHtml(ing.name) + '">' + escapeHtml(ing.name) + '</span>';
+                    html += '      </div>';
+                    html += '      <span class="' + countClass + '">' + ing.have + ' / ' + ing.need + '</span>';
+                    html += '    </div>';
+                }
+            }
+            html += '  </div>';
+            html += '</div>';
+        }
+
+        containerEl.innerHTML = html;
+    };
+
+    // Request actual state when loaded without any mock flash
+    document.addEventListener('DOMContentLoaded', function() {
+        if (window.CraftTracker_requestState) {
+            window.CraftTracker_requestState('');
+        }
+    });
+})();
+</script>
+
+</body>
+</html>
