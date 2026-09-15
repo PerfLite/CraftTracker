@@ -1,4 +1,6 @@
 #include "pch.h"
+#include <spdlog/sinks/basic_file_sink.h>
+#include <spdlog/sinks/msvc_sink.h>
 #include "DebugLog.h"
 #include "Config.h"
 #include "TrackerManager.h"
@@ -11,6 +13,31 @@
 
 namespace
 {
+    void InitializeLog()
+    {
+        auto path = SKSE::log::log_directory();
+        if (!path) {
+            return;
+        }
+
+        *path /= "CraftTracker.log";
+        std::vector<spdlog::sink_ptr> sinks{
+            std::make_shared<spdlog::sinks::basic_file_sink_mt>(path->string(), true),
+            std::make_shared<spdlog::sinks::msvc_sink_mt>()
+        };
+
+        auto logger = std::make_shared<spdlog::logger>("global", sinks.begin(), sinks.end());
+#ifndef NDEBUG
+        logger->set_level(spdlog::level::debug);
+        logger->flush_on(spdlog::level::debug);
+#else
+        logger->set_level(spdlog::level::info);
+        logger->flush_on(spdlog::level::info);
+#endif
+        spdlog::set_default_logger(std::move(logger));
+        spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%l] %v");
+    }
+
     void Initialize()
     {
         Dbg("--- Initializing CraftTracker ---");
@@ -66,6 +93,8 @@ namespace
 
 extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_skse)
 {
+    InitializeLog();
+
     Dbg("========================================");
     Dbg("CraftTracker SKSEPlugin_Load entered");
     Dbg("========================================");
