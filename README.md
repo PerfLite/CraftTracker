@@ -1,6 +1,6 @@
 # Craft Tracker (SKSE + Prisma UI)
 
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Skyrim SE / AE](https://img.shields.io/badge/Skyrim-SE%20%7C%20AE-brightgreen.svg)]()
 [![Prisma UI](https://img.shields.io/badge/UI-Prisma%20UI-orange.svg)](https://www.prismaui.dev/)
 
@@ -159,5 +159,5 @@ xmake build -y
 
 ## 📄 Лицензия / License
 
-Проект распространяется под лицензией **GNU General Public License v3.0 (GPL-3.0)**.  
+Проект распространяется под лицензией **MIT License**.  
 Подробности смотрите в файле [LICENSE](LICENSE).
